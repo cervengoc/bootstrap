@@ -1115,16 +1115,16 @@ var Collapse = (function ($) {
 
       // public
 
-      value: function toggle() {
+      value: function toggle(event) {
         if ($(this._element).hasClass(ClassName.IN)) {
-          this.hide();
+          this.hide(event);
         } else {
-          this.show();
+          this.show(event);
         }
       }
     }, {
       key: 'show',
-      value: function show() {
+      value: function show(event) {
         var _this4 = this;
 
         if (this._isTransitioning || $(this._element).hasClass(ClassName.IN)) {
@@ -1148,7 +1148,8 @@ var Collapse = (function ($) {
           }
         }
 
-        var startEvent = $.Event(Event.SHOW);
+        var related = { relatedEvent: event };
+        var startEvent = $.Event(Event.SHOW, related);
         $(this._element).trigger(startEvent);
         if (startEvent.isDefaultPrevented()) {
           return;
@@ -1174,6 +1175,7 @@ var Collapse = (function ($) {
 
         this.setTransitioning(true);
 
+        var endEvent = $.Event(Event.SHOWN, related);
         var complete = function complete() {
           $(_this4._element).removeClass(ClassName.COLLAPSING).addClass(ClassName.COLLAPSE).addClass(ClassName.IN);
 
@@ -1181,7 +1183,7 @@ var Collapse = (function ($) {
 
           _this4.setTransitioning(false);
 
-          $(_this4._element).trigger(Event.SHOWN);
+          $(_this4._element).trigger(endEvent);
         };
 
         if (!Util.supportsTransitionEnd()) {
@@ -1198,14 +1200,15 @@ var Collapse = (function ($) {
       }
     }, {
       key: 'hide',
-      value: function hide() {
+      value: function hide(event) {
         var _this5 = this;
 
         if (this._isTransitioning || !$(this._element).hasClass(ClassName.IN)) {
           return;
         }
 
-        var startEvent = $.Event(Event.HIDE);
+        var related = { relatedEvent: event };
+        var startEvent = $.Event(Event.HIDE, related);
         $(this._element).trigger(startEvent);
         if (startEvent.isDefaultPrevented()) {
           return;
@@ -1228,9 +1231,10 @@ var Collapse = (function ($) {
 
         this.setTransitioning(true);
 
+        var endEvent = $.Event(Event.HIDDEN, related);
         var complete = function complete() {
           _this5.setTransitioning(false);
-          $(_this5._element).removeClass(ClassName.COLLAPSING).addClass(ClassName.COLLAPSE).trigger(Event.HIDDEN);
+          $(_this5._element).removeClass(ClassName.COLLAPSING).addClass(ClassName.COLLAPSE).trigger(endEvent);
         };
 
         this._element.style[dimension] = 0;
@@ -1313,6 +1317,10 @@ var Collapse = (function ($) {
     }, {
       key: '_jQueryInterface',
       value: function _jQueryInterface(config) {
+        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          args[_key - 1] = arguments[_key];
+        }
+
         return this.each(function () {
           var $this = $(this);
           var data = $this.data(DATA_KEY);
@@ -1328,10 +1336,12 @@ var Collapse = (function ($) {
           }
 
           if (typeof config === 'string') {
+            var _data;
+
             if (data[config] === undefined) {
               throw new Error('No method named "' + config + '"');
             }
-            data[config]();
+            (_data = data)[config].apply(_data, args);
           }
         });
       }
@@ -1357,7 +1367,7 @@ var Collapse = (function ($) {
     var data = $(target).data(DATA_KEY);
     var config = data ? 'toggle' : $(this).data();
 
-    Collapse._jQueryInterface.call($(target), config);
+    Collapse._jQueryInterface.call($(target), config, event);
   });
 
   /**
@@ -1456,7 +1466,7 @@ var Dropdown = (function ($) {
 
       // public
 
-      value: function toggle() {
+      value: function toggle(event) {
         if (this.disabled || $(this).hasClass(ClassName.DISABLED)) {
           return false;
         }
@@ -1479,8 +1489,11 @@ var Dropdown = (function ($) {
           $(dropdown).on('click', Dropdown._clearMenus);
         }
 
-        var relatedTarget = { relatedTarget: this };
-        var showEvent = $.Event(Event.SHOW, relatedTarget);
+        var related = {
+          relatedTarget: this,
+          relatedEvent: event
+        };
+        var showEvent = $.Event(Event.SHOW, related);
 
         $(parent).trigger(showEvent);
 
@@ -1492,7 +1505,7 @@ var Dropdown = (function ($) {
         this.setAttribute('aria-expanded', 'true');
 
         $(parent).toggleClass(ClassName.OPEN);
-        $(parent).trigger($.Event(Event.SHOWN, relatedTarget));
+        $(parent).trigger($.Event(Event.SHOWN, related));
 
         return false;
       }
@@ -1548,7 +1561,10 @@ var Dropdown = (function ($) {
 
         for (var i = 0; i < toggles.length; i++) {
           var _parent = Dropdown._getParentFromElement(toggles[i]);
-          var relatedTarget = { relatedTarget: toggles[i] };
+          var related = {
+            relatedTarget: toggles[i],
+            relatedEvent: event
+          };
 
           if (!$(_parent).hasClass(ClassName.OPEN)) {
             continue;
@@ -1558,7 +1574,7 @@ var Dropdown = (function ($) {
             continue;
           }
 
-          var hideEvent = $.Event(Event.HIDE, relatedTarget);
+          var hideEvent = $.Event(Event.HIDE, related);
           $(_parent).trigger(hideEvent);
           if (hideEvent.isDefaultPrevented()) {
             continue;
@@ -1566,7 +1582,7 @@ var Dropdown = (function ($) {
 
           toggles[i].setAttribute('aria-expanded', 'false');
 
-          $(_parent).removeClass(ClassName.OPEN).trigger($.Event(Event.HIDDEN, relatedTarget));
+          $(_parent).removeClass(ClassName.OPEN).trigger($.Event(Event.HIDDEN, related));
         }
       }
     }, {

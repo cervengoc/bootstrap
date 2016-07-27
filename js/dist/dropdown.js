@@ -84,7 +84,7 @@ var Dropdown = (function ($) {
 
       // public
 
-      value: function toggle() {
+      value: function toggle(event) {
         if (this.disabled || $(this).hasClass(ClassName.DISABLED)) {
           return false;
         }
@@ -107,8 +107,11 @@ var Dropdown = (function ($) {
           $(dropdown).on('click', Dropdown._clearMenus);
         }
 
-        var relatedTarget = { relatedTarget: this };
-        var showEvent = $.Event(Event.SHOW, relatedTarget);
+        var related = {
+          relatedTarget: this,
+          relatedEvent: event
+        };
+        var showEvent = $.Event(Event.SHOW, related);
 
         $(parent).trigger(showEvent);
 
@@ -120,7 +123,7 @@ var Dropdown = (function ($) {
         this.setAttribute('aria-expanded', 'true');
 
         $(parent).toggleClass(ClassName.OPEN);
-        $(parent).trigger($.Event(Event.SHOWN, relatedTarget));
+        $(parent).trigger($.Event(Event.SHOWN, related));
 
         return false;
       }
@@ -176,7 +179,10 @@ var Dropdown = (function ($) {
 
         for (var i = 0; i < toggles.length; i++) {
           var _parent = Dropdown._getParentFromElement(toggles[i]);
-          var relatedTarget = { relatedTarget: toggles[i] };
+          var related = {
+            relatedTarget: toggles[i],
+            relatedEvent: event
+          };
 
           if (!$(_parent).hasClass(ClassName.OPEN)) {
             continue;
@@ -186,7 +192,7 @@ var Dropdown = (function ($) {
             continue;
           }
 
-          var hideEvent = $.Event(Event.HIDE, relatedTarget);
+          var hideEvent = $.Event(Event.HIDE, related);
           $(_parent).trigger(hideEvent);
           if (hideEvent.isDefaultPrevented()) {
             continue;
@@ -194,7 +200,7 @@ var Dropdown = (function ($) {
 
           toggles[i].setAttribute('aria-expanded', 'false');
 
-          $(_parent).removeClass(ClassName.OPEN).trigger($.Event(Event.HIDDEN, relatedTarget));
+          $(_parent).removeClass(ClassName.OPEN).trigger($.Event(Event.HIDDEN, related));
         }
       }
     }, {

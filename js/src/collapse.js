@@ -103,15 +103,15 @@ const Collapse = (($) => {
 
     // public
 
-    toggle() {
+    toggle(event) {
       if ($(this._element).hasClass(ClassName.IN)) {
-        this.hide()
+        this.hide(event)
       } else {
-        this.show()
+        this.show(event)
       }
     }
 
-    show() {
+    show(event) {
       if (this._isTransitioning ||
         $(this._element).hasClass(ClassName.IN)) {
         return
@@ -134,7 +134,8 @@ const Collapse = (($) => {
         }
       }
 
-      let startEvent = $.Event(Event.SHOW)
+      let related = { relatedEvent: event }
+      let startEvent = $.Event(Event.SHOW, related)
       $(this._element).trigger(startEvent)
       if (startEvent.isDefaultPrevented()) {
         return
@@ -164,6 +165,7 @@ const Collapse = (($) => {
 
       this.setTransitioning(true)
 
+      let endEvent = $.Event(Event.SHOWN, related)
       let complete = () => {
         $(this._element)
           .removeClass(ClassName.COLLAPSING)
@@ -174,7 +176,7 @@ const Collapse = (($) => {
 
         this.setTransitioning(false)
 
-        $(this._element).trigger(Event.SHOWN)
+        $(this._element).trigger(endEvent)
       }
 
       if (!Util.supportsTransitionEnd()) {
@@ -192,13 +194,14 @@ const Collapse = (($) => {
       this._element.style[dimension] = `${this._element[scrollSize]}px`
     }
 
-    hide() {
+    hide(event) {
       if (this._isTransitioning ||
         !$(this._element).hasClass(ClassName.IN)) {
         return
       }
 
-      let startEvent = $.Event(Event.HIDE)
+      let related = { relatedEvent: event }
+      let startEvent = $.Event(Event.HIDE, related)
       $(this._element).trigger(startEvent)
       if (startEvent.isDefaultPrevented()) {
         return
@@ -227,12 +230,13 @@ const Collapse = (($) => {
 
       this.setTransitioning(true)
 
+      let endEvent = $.Event(Event.HIDDEN, related)
       let complete = () => {
         this.setTransitioning(false)
         $(this._element)
           .removeClass(ClassName.COLLAPSING)
           .addClass(ClassName.COLLAPSE)
-          .trigger(Event.HIDDEN)
+          .trigger(endEvent)
       }
 
       this._element.style[dimension] = 0
@@ -312,7 +316,7 @@ const Collapse = (($) => {
       return selector ? $(selector)[0] : null
     }
 
-    static _jQueryInterface(config) {
+    static _jQueryInterface(config, ...args) {
       return this.each(function () {
         let $this   = $(this)
         let data    = $this.data(DATA_KEY)
@@ -336,7 +340,7 @@ const Collapse = (($) => {
           if (data[config] === undefined) {
             throw new Error(`No method named "${config}"`)
           }
-          data[config]()
+          data[config](...args)
         }
       })
     }
@@ -357,7 +361,7 @@ const Collapse = (($) => {
     let data   = $(target).data(DATA_KEY)
     let config = data ? 'toggle' : $(this).data()
 
-    Collapse._jQueryInterface.call($(target), config)
+    Collapse._jQueryInterface.call($(target), config, event)
   })
 
 

@@ -80,7 +80,7 @@ const Dropdown = (($) => {
 
     // public
 
-    toggle() {
+    toggle(event) {
       if (this.disabled || $(this).hasClass(ClassName.DISABLED)) {
         return false
       }
@@ -104,8 +104,11 @@ const Dropdown = (($) => {
         $(dropdown).on('click', Dropdown._clearMenus)
       }
 
-      let relatedTarget = { relatedTarget : this }
-      let showEvent     = $.Event(Event.SHOW, relatedTarget)
+      let related = {
+        relatedTarget: this,
+        relatedEvent: event
+      }
+      let showEvent = $.Event(Event.SHOW, related)
 
       $(parent).trigger(showEvent)
 
@@ -117,7 +120,7 @@ const Dropdown = (($) => {
       this.setAttribute('aria-expanded', 'true')
 
       $(parent).toggleClass(ClassName.OPEN)
-      $(parent).trigger($.Event(Event.SHOWN, relatedTarget))
+      $(parent).trigger($.Event(Event.SHOWN, related))
 
       return false
     }
@@ -168,8 +171,11 @@ const Dropdown = (($) => {
       let toggles = $.makeArray($(Selector.DATA_TOGGLE))
 
       for (let i = 0; i < toggles.length; i++) {
-        let parent        = Dropdown._getParentFromElement(toggles[i])
-        let relatedTarget = { relatedTarget : toggles[i] }
+        let parent = Dropdown._getParentFromElement(toggles[i])
+        let related = {
+          relatedTarget: toggles[i],
+          relatedEvent: event
+        }
 
         if (!$(parent).hasClass(ClassName.OPEN)) {
           continue
@@ -181,7 +187,7 @@ const Dropdown = (($) => {
           continue
         }
 
-        let hideEvent = $.Event(Event.HIDE, relatedTarget)
+        let hideEvent = $.Event(Event.HIDE, related)
         $(parent).trigger(hideEvent)
         if (hideEvent.isDefaultPrevented()) {
           continue
@@ -191,7 +197,7 @@ const Dropdown = (($) => {
 
         $(parent)
           .removeClass(ClassName.OPEN)
-          .trigger($.Event(Event.HIDDEN, relatedTarget))
+          .trigger($.Event(Event.HIDDEN, related))
       }
     }
 
